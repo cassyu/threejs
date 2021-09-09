@@ -1,8 +1,9 @@
 /* eslint no-console:0 consistent-return:0 */
 "use strict";
 
+// 创建着色器方法，输入参数：渲染上下文，着色器类型，数据源
 function createShader(gl, type, source) {
-  var shader = gl.createShader(type);
+  var shader = gl.createShader(type);// 创建做瑟琪
   gl.shaderSource(shader, source);
   gl.compileShader(shader);
   var success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
@@ -49,6 +50,8 @@ function main() {
 
   // look up where the vertex data needs to go.
   var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+  var resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
+  var colorUniformLocation = gl.getUniformLocation(program, "u_color");
 
   // Create a buffer and put three 2d clip space points in it
   var positionBuffer = gl.createBuffer();
@@ -57,9 +60,12 @@ function main() {
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
   var positions = [
-    0, 0,
-    0, 0.5,
-    0.7, 0,
+    10, 20,
+    80, 20,
+    10, 30,
+    10, 30,
+    80, 20,
+    80, 30,
   ];
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
@@ -82,7 +88,7 @@ function main() {
   gl.enableVertexAttribArray(positionAttributeLocation);
 
   // Bind the position buffer.
-  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+  // gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
   // Tell the attribute how to get data out of positionBuffer (ARRAY_BUFFER)
   var size = 2;          // 2 components per iteration
@@ -93,11 +99,52 @@ function main() {
   gl.vertexAttribPointer(
       positionAttributeLocation, size, type, normalize, stride, offset);
 
-  // draw
-  var primitiveType = gl.TRIANGLES;
-  var offset = 0;
-  var count = 3;
-  gl.drawArrays(primitiveType, offset, count);
+  gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
+
+  // // draw
+  // var primitiveType = gl.TRIANGLES;
+  // var offset = 0;
+  // var count = 6;
+  // gl.drawArrays(primitiveType, offset, count);
+    // draw 50 random rectangles in random colors
+    for (var ii = 0; ii < 50; ++ii) {
+      // Setup a random rectangle
+      // This will write to positionBuffer because
+      // its the last thing we bound on the ARRAY_BUFFER
+      // bind point
+      setRectangle(
+          gl, randomInt(300), randomInt(300), randomInt(300), randomInt(300));
+  
+      // Set a random color.
+      gl.uniform4f(colorUniformLocation, Math.random(), Math.random(), Math.random(), 1);
+  
+      // Draw the rectangle.
+      var primitiveType = gl.TRIANGLES;
+      var offset = 0;
+      var count = 6;
+      gl.drawArrays(primitiveType, offset, count);
+    }
+}
+
+// Returns a random integer from 0 to range - 1.
+function randomInt(range) {
+  return Math.floor(Math.random() * range);
+}
+
+// Fill the buffer with the values that define a rectangle.
+function setRectangle(gl, x, y, width, height) {
+  var x1 = x;
+  var x2 = x + width;
+  var y1 = y;
+  var y2 = y + height;
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+     x1, y1,
+     x2, y1,
+     x1, y2,
+     x1, y2,
+     x2, y1,
+     x2, y2,
+  ]), gl.STATIC_DRAW);
 }
 
 main();
